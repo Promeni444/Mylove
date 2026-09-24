@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Для моей любимой ❤️</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .font-handwriting {
+      font-family: 'Caveat', cursive;
+    }
+    
+    /* 3D Flip Card Styles */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+
+    /* Floating Hearts Animation */
+    @keyframes floatHeart {
+      0% {
+        transform: translateY(100vh) scale(0.5) rotate(0deg);
+        opacity: 0;
+      }
+      20% {
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateY(-10vh) scale(1.2) rotate(360deg);
+        opacity: 0;
+      }
+    }
+    .heart-particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 10;
+      animation: floatHeart 8s linear infinite;
+    }
+
+    /* Trail Heart Animation */
+    .cursor-heart {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      font-size: 16px;
+      animation: fadeAndRise 1s forwards ease-out;
+    }
+    @keyframes fadeAndRise {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -80px) scale(1.8);
+      }
+    }
+
+    /* Envelope Styles - Mobile Adaptive */
+    .envelope-wrapper {
+      perspective: 1000px;
+    }
+    .envelope {
+      position: relative;
+      width: 260px;
+      height: 170px;
+      background: #f43f5e;
+      border-radius: 0 0 16px 16px;
+      box-shadow: 0 15px 25px rgba(0,0,0,0.15);
+      cursor: pointer;
+      margin: 0 auto;
+    }
+    @media (min-width: 640px) {
+      .envelope {
+        width: 280px;
+        height: 180px;
+      }
+    }
+    .envelope-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 130px solid transparent;
+      border-right: 130px solid transparent;
+      border-top: 95px solid #e11d48;
+      transform-origin: top;
+      transition: transform 0.6s ease;
+      z-index: 3;
+    }
+    @media (min-width: 640px) {
+      .envelope-top {
+        border-left-width: 140px;
+        border-right-width: 140px;
+        border-top-width: 100px;
+      }
+    }
+    .envelope.open .envelope-top {
+      transform: rotateX(180deg);
+      z-index: 1;
+    }
+    .letter {
+      position: absolute;
+      bottom: 10px;
+      left: 12px;
+      right: 12px;
+      height: 140px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px;
+      transition: transform 0.6s ease, height 0.6s ease;
+      z-index: 2;
+      box-shadow: 0 -5px 10px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    .envelope.open .letter {
+      transform: translateY(-70px);
+      height: 200px;
+      z-index: 4;
+    }
+    @media (min-width: 640px) {
+      .envelope.open .letter {
+        transform: translateY(-80px);
+        height: 220px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-rose-50 via-pink-100 to-red-100 min-h-screen text-slate-800 pb-16 relative overflow-x-hidden">
+
+  <!-- BACKGROUND FLOATING HEARTS -->
+  <div id="hearts-container" class="fixed inset-0 pointer-events-none z-0"></div>
+
+  <!-- FLOATING MUSIC BUTTON -->
+  <button id="music-btn" onclick="toggleMusic()" class="fixed top-3 right-3 z-40 bg-white/90 backdrop-blur-md text-rose-600 p-2.5 sm:p-3.5 rounded-full shadow-lg border border-pink-200 flex items-center justify-center hover:scale-105 active:scale-95 transition duration-300">
+    <span id="music-icon" class="text-lg sm:text-xl">🎵</span>
+    <span id="music-text" class="text-xs font-bold ml-1.5 hidden sm:inline">Включить музыку</span>
+  </button>
+  <audio id="bg-music" loop>
+    <source src="Indila - Love Story.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- HERO SECTION -->
+  <header class="text-center pt-14 sm:pt-20 pb-6 px-4 max-w-3xl mx-auto relative z-10">
+    <span class="bg-pink-200 text-pink-700 font-semibold px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-xs sm:text-sm inline-block mb-3 shadow-sm">
+      С днём рождения, любимая! ✨
+    </span>
+    
+    <h1 class="text-3xl sm:text-5xl md:text-6xl font-extrabold text-rose-600 mb-3 tracking-tight min-h-[60px] sm:min-h-[72px]" id="typing-title"></h1>
+    
+    <p class="text-sm sm:text-lg text-slate-600 max-w-xl mx-auto px-2">
+      Нажимай на карточку, чтобы узнать причину, или на значок в углу фото, чтобы открыть её во весь экран!
+    </p>
+
+    <!-- COUNTER BOARD -->
+    <div class="mt-6 sm:mt-8 bg-white/80 backdrop-blur-md rounded-2xl p-4 sm:p-6 shadow-xl border border-pink-100 max-w-lg mx-auto">
+      <p class="text-xs sm:text-sm font-bold text-pink-500 uppercase tracking-wider mb-2.5">Мы вместе уже:</p>
+      <div class="grid grid-cols-4 gap-1.5 sm:gap-2 text-center" id="timer">
+        <div class="bg-rose-50 p-2 sm:p-3 rounded-xl border border-rose-100">
+          <span id="days" class="text-xl sm:text-3xl font-extrabold text-rose-600">0</span>
+          <p class="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">дней</p>
+        </div>
+        <div class="bg-rose-50 p-2 sm:p-3 rounded-xl border border-rose-100">
+          <span id="hours" class="text-xl sm:text-3xl font-extrabold text-rose-600">0</span>
+          <p class="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">часов</p>
+        </div>
+        <div class="bg-rose-50 p-2 sm:p-3 rounded-xl border border-rose-100">
+          <span id="minutes" class="text-xl sm:text-3xl font-extrabold text-rose-600">0</span>
+          <p class="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">минут</p>
+        </div>
+        <div class="bg-rose-50 p-2 sm:p-3 rounded-xl border border-rose-100">
+          <span id="seconds" class="text-xl sm:text-3xl font-extrabold text-rose-600">0</span>
+          <p class="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5">секунд</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CARDS GRID -->
+  <main class="max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-6 relative z-10">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-5" id="cards-container"></div>
+
+    <!-- ENVELOPE & LETTER SECTION -->
+    <section class="mt-14 sm:mt-20 text-center">
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-rose-600 mb-4 sm:mb-6">Тебе письмо 💌</h2>
+      
+      <div class="envelope-wrapper my-6 sm:my-8">
+        <div class="envelope" id="envelope" onclick="openEnvelope()">
+          <div class="envelope-top"></div>
+          <div class="letter">
+            <p class="font-handwriting text-lg sm:text-xl text-slate-700 leading-tight sm:leading-snug">
+              «Спасибо за каждую улыбку, за твою заботу и за то, что делаешь каждый мой день счастливым. Желаю исполнение всех твоих желаний! ❤️»
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-10 px-4">
+        <button onclick="triggerConfetti()" class="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transform active:scale-95 transition duration-200 w-full sm:w-auto text-sm sm:text-base">
+          Нажми для салюта! 🎉
+        </button>
+        <button onclick="openCouponModal()" class="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-900 font-extrabold py-3 px-6 rounded-full shadow-lg transform active:scale-95 transition duration-200 w-full sm:w-auto text-sm sm:text-base">
+          Получить подарок 🎁
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL PHOTO VIEW -->
+  <div id="photo-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 hidden opacity-0 transition-opacity duration-300" onclick="closePhotoModal()">
+    <div class="relative max-w-3xl w-full max-h-[90vh] flex flex-col items-center justify-center" onclick="event.stopPropagation()">
+      <button onclick="closePhotoModal()" class="absolute -top-12 right-0 sm:right-2 text-white/80 hover:text-white font-bold text-3xl p-2 focus:outline-none">
+        &times;
+      </button>
+      <img id="modal-img" src="" alt="Увеличенное фото" class="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/20" />
+      <p id="modal-caption" class="text-white text-center mt-3 text-sm sm:text-base font-semibold bg-black/50 px-4 py-2 rounded-full backdrop-blur-sm border border-white/10"></p>
+    </div>
+  </div>
+
+  <!-- MODAL COUPON -->
+  <div id="coupon-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-gradient-to-br from-amber-100 via-rose-50 to-pink-100 rounded-3xl border-4 border-amber-300 p-5 sm:p-8 max-w-sm sm:max-w-md w-full shadow-2xl relative text-center transform scale-90 transition-transform duration-300" id="coupon-box">
+      <button onclick="closeCouponModal()" class="absolute top-3 right-4 text-slate-400 hover:text-slate-600 font-bold text-2xl p-1">&times;</button>
+      
+      <span class="bg-amber-300 text-amber-900 font-extrabold text-[10px] sm:text-xs px-3 py-1 rounded-full uppercase tracking-wider mb-2.5 inline-block">
+        VIP Подарочный Купон 🎫
+      </span>
+      <h3 class="text-xl sm:text-2xl font-black text-rose-600 mb-2">Исполнение Любого Желания</h3>
+      <p class="text-xs sm:text-sm text-slate-600 mb-5">Этот купон даёт право на одно главное желание или совместный романтический вечер!</p>
+
+      <div class="bg-white/80 border-2 border-dashed border-amber-400 rounded-2xl p-3.5 sm:p-4 mb-5">
+        <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase">Действителен:</p>
+        <p class="text-base sm:text-lg font-extrabold text-slate-800">Бессрочно и без ограничений ❤️</p>
+      </div>
+
+      <button onclick="claimCoupon()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 px-6 rounded-full text-xs sm:text-sm shadow-md transition active:scale-95">
+        Активировать прямо сейчас ✨
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // 1. Дата начала отношений
+    const startDate = new Date(2021, 9, 1); 
+
+    // 2. Печатающийся текст
+    const titleText = "Причины, почему я тебя люблю ❤️";
+    let titleIndex = 0;
+    function typeTitle() {
+      if (titleIndex < titleText.length) {
+        document.getElementById("typing-title").innerHTML += titleText.charAt(titleIndex);
+        titleIndex++;
+        setTimeout(typeTitle, 80);
+      }
+    }
+    window.onload = typeTitle;
+
+    // 3. Карточки с фото
+    const cardsData = [
+      { text: "За твою искреннюю улыбку", img: "p1.jpeg" },
+      { text: "За то, как ты смеёшься над моими шутками", img: "p2.jpeg" },
+      { text: "За наши долгие вечерние разговоры", img: "p3.jpeg" },
+      { text: "За твои невероятные глаза", img: "sh2.jpeg" },
+      { text: "За твою поддержку в любой ситуации", img: "sh3.jpeg" },
+      { text: "За то, что с тобой я чувствую себя счастливым", img: "sh4.jpeg" },
+      { text: "За твои утренние сообщения", img: "sh5.jpeg" },
+      { text: "За то, как ты заботишься обо мне", img: "sh7.jpeg" },
+      { text: "За твою доброту и мягкий характер", img: "sh9.jpeg" },
+      { text: "За наши совместные прогулки", img: "sh8.jpeg" },
+      { text: "За то, что ты вдохновляешь меня", img: "sh10.jpeg" },
+      { text: "За то, что ты — это ты ❤️", img: "sh5.jpeg" },
+      { text: "За то, как уютно объятия с тобой", img: "sh11.jpeg" },
+      { text: "За твоё понимание без лишних слов", img: "sh12.jpeg" },
+      { text: "За то, как ты радуешься мелочам", img: "sh13.jpeg" },
+      { text: "За твоё прекрасное чувство юмора", img: "sh14.jpeg" },
+      { text: "За теплоту твоего сердца", img: "sh15.jpeg" },
+      { text: "За то, что делаешь каждый день особенным", img: "sh16.jpeg" },
+      { text: "За твой голосок, который я готов слушать вечно", img: "sh17.jpeg" },
+      { text: "За наши мечтания о будущем", img: "sh18.jpeg" },
+      { text: "За то, как твой взгляд поднимает мне настроение", img: "sh19.jpeg" },
+      { text: "За то, что ты делаешь меня лучше", img: "sh20.jpeg" }
+    ];
+
+    const container = document.getElementById('cards-container');
+    cardsData.forEach((item) => {
+      container.innerHTML += `
+        <div class="perspective-1000 h-44 sm:h-52 cursor-pointer relative" onclick="flipCard(this)">
+          <div class="card-inner relative w-full h-full transform-style-3d shadow-md hover:shadow-xl rounded-2xl transition-all duration-300">
+            <!-- Front Face (Photo) -->
+            <div class="absolute w-full h-full rounded-2xl overflow-hidden border-2 border-white shadow-sm backface-hidden bg-rose-100">
+              <img src="${item.img}" alt="Фото" class="w-full h-full object-cover object-center" />
+              
+              <!-- Clean Translucent Zoom Button -->
+              <button onclick="openPhotoModal(event, '${item.img}', '${item.text}')" title="Увеличить фото" class="absolute top-2 right-2 bg-black/20 hover:bg-black/40 text-white p-2 sm:p-2.5 rounded-full backdrop-blur-md border border-white/40 shadow-sm transition duration-200 active:scale-90 z-20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-4.5 sm:w-4.5 drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+              </button>
+            </div>
+            <!-- Back Face (Text) -->
+            <div class="absolute w-full h-full bg-gradient-to-br from-rose-500 to-pink-500 text-white rounded-2xl p-3 sm:p-4 flex items-center justify-center text-center font-semibold text-xs sm:text-base rotate-y-180 backface-hidden shadow-inner border-2 border-pink-300">
+              <p>${item.text}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    function flipCard(card) {
+      card.querySelector('.card-inner').classList.toggle('rotate-y-180');
+    }
+
+    // 4. Просмотр полноэкранной фотографии
+    function openPhotoModal(e, imgSrc, caption) {
+      e.stopPropagation(); // Не переворачивает карточку
+      const modal = document.getElementById('photo-modal');
+      const img = document.getElementById('modal-img');
+      const cap = document.getElementById('modal-caption');
+
+      img.src = imgSrc;
+      cap.innerText = caption;
+
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+      }, 10);
+    }
+
+    function closePhotoModal() {
+      const modal = document.getElementById('photo-modal');
+      modal.classList.add('opacity-0');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    // 5. Эффект следов сердечек
+    document.addEventListener('mousemove', function(e) {
+      createCursorHeart(e.clientX, e.clientY);
+    });
+    document.addEventListener('touchmove', function(e) {
+      if (e.touches.length > 0) {
+        createCursorHeart(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    });
+
+    function createCursorHeart(x, y) {
+      if (Math.random() > 0.4) return;
+      const heart = document.createElement('span');
+      heart.className = 'cursor-heart';
+      heart.innerHTML = '❤️';
+      heart.style.left = x + 'px';
+      heart.style.top = y + 'px';
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 1000);
+    }
+
+    // 6. Конверт
+    function openEnvelope() {
+      const env = document.getElementById('envelope');
+      env.classList.toggle('open');
+      if (env.classList.contains('open')) {
+        triggerConfetti();
+      }
+    }
+
+    // 7. Таймер
+    function updateTimer() {
+      const now = new Date();
+      const diff = now - startDate;
+      document.getElementById('days').innerText = Math.floor(diff / (1000 * 60 * 60 * 24));
+      document.getElementById('hours').innerText = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      document.getElementById('minutes').innerText = Math.floor((diff / 1000 / 60) % 60);
+      document.getElementById('seconds').innerText = Math.floor((diff / 1000) % 60);
+    }
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    // Салют
+    function triggerConfetti() {
+      confetti({ particleCount: 100, spread: 60, origin: { y: 0.7 } });
+    }
+
+    // Плеер
+    let isPlaying = false;
+    function toggleMusic() {
+      const audio = document.getElementById('bg-music');
+      const icon = document.getElementById('music-icon');
+      const text = document.getElementById('music-text');
+      if (isPlaying) {
+        audio.pause();
+        icon.innerText = "🎵";
+        text.innerText = "Включить музыку";
+      } else {
+        audio.play();
+        icon.innerText = "⏸️";
+        text.innerText = "Пауза";
+      }
+      isPlaying = !isPlaying;
+    }
+
+    // Модалка с купоном
+    function openCouponModal() {
+      const modal = document.getElementById('coupon-modal');
+      const box = document.getElementById('coupon-box');
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        box.classList.remove('scale-90');
+      }, 10);
+      triggerConfetti();
+    }
+
+    function closeCouponModal() {
+      const modal = document.getElementById('coupon-modal');
+      const box = document.getElementById('coupon-box');
+      modal.classList.add('opacity-0');
+      box.classList.add('scale-90');
+      setTimeout(() => { modal.classList.add('hidden'); }, 300);
+    }
+
+    function claimCoupon() {
+      alert("Купон успешно активирован! Напиши или скажи мне своё желание ❤️");
+      closeCouponModal();
+    }
+
+    // Падающие сердечки
+    function createHeart() {
+      const heartsContainer = document.getElementById('hearts-container');
+      const heart = document.createElement('div');
+      heart.classList.add('heart-particle');
+      heart.innerHTML = '❤️';
+      heart.style.left = Math.random() * 100 + 'vw';
+      heart.style.animationDuration = Math.random() * 3 + 5 + 's';
+      heart.style.fontSize = Math.random() * 12 + 10 + 'px';
+      heartsContainer.appendChild(heart);
+
+      setTimeout(() => { heart.remove(); }, 8000);
+    }
+    setInterval(createHeart, 700);
+  </script>
+</body>
+</html>
